@@ -1,0 +1,90 @@
+{
+  "name": "simple-motion-blur",
+  "version": "1.1.0",
+  "description": "A simpler local desktop interface for Tekno's Blur",
+  "author": "Motion Blur",
+  "license": "MIT",
+  "private": true,
+  "main": "dist/electron/main/main.js",
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "tsx --test tests/*.test.ts",
+    "verify:engine": "tsx scripts/verify-engine.ts",
+    "package": "node scripts/package.mjs",
+    "bundle": "node scripts/bundle.mjs",
+    "smoke": "node scripts/smoke-ui.mjs"
+  },
+  "build": {
+    "appId": "local.motionblur.desktop",
+    "productName": "Motion Blur",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "assets/icon.png",
+      "LICENSE",
+      "package.json"
+    ],
+    "asar": true,
+    "extraResources": [
+      {
+        "from": "installer/Install-BlurEngine.cmd",
+        "to": "setup/Install-BlurEngine.cmd"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signAndEditExecutable": true,
+      "icon": "assets/icon.ico"
+    },
+    "portable": {
+      "artifactName": "Motion-Blur-${version}-Windows-x64.exe"
+    },
+    "nsis": {
+      "artifactName": "Motion-Blur-${version}-Setup-Windows-x64.exe",
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "license": "LICENSE",
+      "include": "installer/installer.nsh"
+    }
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "archiver": "^8.0.0",
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
+    "playwright": "^1.63.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2"
+  }
+}

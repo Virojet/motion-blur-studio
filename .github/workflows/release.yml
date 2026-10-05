@@ -1,0 +1,44 @@
+name: Build Windows release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Validate tag and package version
+        shell: pwsh
+        run: |
+          $releaseVersion = node -p "require('./package.json').version"
+          if ($env:GITHUB_REF_NAME -ne "v$releaseVersion") { throw 'Tag must match package.json version.' }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec install-electron
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm package
+      - run: pnpm bundle
+      - name: Publish downloadable release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $releaseVersion = node -p "require('./package.json').version"
+          $releaseFiles = Get-ChildItem release -File | Where-Object { $_.Name -like "Motion-Blur-$releaseVersion-*" -or $_.Name -eq 'SHA256SUMS.txt' }
+          gh release view $env:GITHUB_REF_NAME --json tagName
+          if ($LASTEXITCODE -eq 0) {
+            Write-Output 'This tag already has a published release; preserving its uploaded downloads and checksums.'
+            exit 0
+          }
+          gh release create $env:GITHUB_REF_NAME @($releaseFiles.FullName) --verify-tag --title "Motion Blur $releaseVersion" --notes-file release/RELEASE-NOTES.md
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
